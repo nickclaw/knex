@@ -336,7 +336,7 @@ module.exports = function(knex) {
         // Map the table names to promises that evaluate chai expectations to
         // confirm that the table exists and the 'id' and 'name' columns exist
         // within the table
-        return Bluebird.map(tables, function(table) {
+        return Promise.all(tables.map(function(table) {
           return knex.schema.hasTable(table).then(function(exists) {
             expect(exists).to.equal(true);
             if (exists) {
@@ -350,7 +350,7 @@ module.exports = function(knex) {
               ]);
             }
           });
-        });
+        }));
       });
     });
 
@@ -385,11 +385,11 @@ module.exports = function(knex) {
           'migration_test_4_1',
         ];
 
-        return Bluebird.map(expectedTables, function(table) {
+        return Promise.all(expectedTables.map(function(table) {
           return knex.schema.hasTable(table).then(function(exists) {
             expect(exists).to.equal(true);
           });
-        });
+        }));
       });
     });
 
@@ -410,11 +410,11 @@ module.exports = function(knex) {
       });
 
       it('should drop tables as specified in the batch', function() {
-        return Bluebird.map(tables, function(table) {
+        return Promise.all(tables.map(function(table) {
           return knex.schema.hasTable(table).then(function(exists) {
             expect(!!exists).to.equal(false);
           });
-        });
+        }));
       });
     });
 
@@ -457,11 +457,11 @@ module.exports = function(knex) {
       });
 
       it('should drop tables as specified in the batch', () => {
-        return Bluebird.map(tables, function(table) {
+        return Promise.all(tables.map(function(table) {
           return knex.schema.hasTable(table).then(function(exists) {
             expect(!!exists).to.equal(false);
           });
-        });
+        }));
       });
     });
 
@@ -502,11 +502,11 @@ module.exports = function(knex) {
       });
 
       it('should drop tables as specified in the batch', () => {
-        return Bluebird.map(tables, function(table) {
+        return Promise.all(tables.map(function(table) {
           return knex.schema.hasTable(table).then(function(exists) {
             expect(!!exists).to.equal(false);
           });
-        });
+        }));
       });
     });
 
@@ -672,29 +672,24 @@ module.exports = function(knex) {
     }
 
     it('is not able to run two migrations in parallel when transactions are disabled', function() {
-      return Bluebird.map(
-        [
-          knex.migrate
-            .latest({
-              directory: 'test/integration/migrate/test',
-              disableTransactions: true,
-            })
-            .catch(function(err) {
-              return err;
-            }),
-          knex.migrate
-            .latest({
-              directory: 'test/integration/migrate/test',
-              disableTransactions: true,
-            })
-            .catch(function(err) {
-              return err;
-            }),
-        ],
-        function(res) {
-          return res && res.name;
-        }
-      ).then(function(res) {
+      return Promise.all([
+        knex.migrate
+          .latest({
+            directory: 'test/integration/migrate/test',
+            disableTransactions: true,
+          })
+          .catch(function(err) {
+            return err.name;
+          }),
+        knex.migrate
+          .latest({
+            directory: 'test/integration/migrate/test',
+            disableTransactions: true,
+          })
+          .catch(function(err) {
+            return err.name;
+          }),
+      ]).then(function(res) {
         // One should fail:
         const hasLockError =
           res[0] === 'MigrationLocked' || res[1] === 'MigrationLocked';
@@ -919,7 +914,7 @@ module.exports = function(knex) {
         'migration_test_2',
         'migration_test_2_1a',
       ];
-      return Bluebird.map(tables, function(table) {
+      return Promise.all(tables.map(function(table) {
         return knex.schema.hasTable(table).then(function(exists) {
           expect(exists).to.equal(true);
           if (exists) {
@@ -933,7 +928,7 @@ module.exports = function(knex) {
             ]);
           }
         });
-      });
+      }));
     });
 
     it('should not create unexpected tables', function() {
