@@ -1,5 +1,6 @@
 const { isNumber, isArray, chunk, flatten, assign } = require('lodash');
 const promiseDelay = require('../util/promise-delay');
+const promiseMapSeries = require('../util/promise-map-series');
 
 module.exports = function batchInsert(
   client,
@@ -40,7 +41,7 @@ module.exports = function batchInsert(
       return promiseDelay(1)
         .then(getTransaction)
         .then((tr) => {
-          return Bluebird.mapSeries(chunks, (items) =>
+          return promiseMapSeries(chunks, (items) =>
             tr(tableName).insert(items, returning)
           )
             .then((result) => {

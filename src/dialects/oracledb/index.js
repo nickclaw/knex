@@ -4,6 +4,7 @@ const _ = require('lodash');
 const inherits = require('inherits');
 const QueryCompiler = require('./query/compiler');
 const ColumnCompiler = require('./schema/columncompiler');
+const promiseMapSeries = require('../../util/promise-map-series');
 const { BlobHelper, ReturningHelper, isConnectionError } = require('./utils');
 const Bluebird = require('bluebird');
 const stream = require('stream');
@@ -196,7 +197,7 @@ Client_Oracledb.prototype.acquireRawConnection = function() {
                 }
               }
             }
-            Bluebird.each(lobs, function(lob) {
+            promiseMapSeries(lobs, function(lob) {
               return new Bluebird(function(lobResolve, lobReject) {
                 readStream(lob.stream, function(err, d) {
                   if (err) {
@@ -288,11 +289,11 @@ Client_Oracledb.prototype._query = function(connection, obj) {
         }
         const rowIds = [];
         let offset = 0;
-        Bluebird.each(obj.outBinding, function(ret, line) {
+        promiseMapSeries(obj.outBinding, function(ret, line) {
           offset =
             offset +
             (obj.outBinding[line - 1] ? obj.outBinding[line - 1].length : 0);
-          return Bluebird.each(ret, function(out, index) {
+          return promiseMapSeries(ret, function(out, index) {
             return new Bluebird(function(bindResolver, bindRejecter) {
               if (out instanceof BlobHelper) {
                 const blob = outBinds[index + offset];

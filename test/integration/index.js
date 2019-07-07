@@ -5,11 +5,10 @@
 const knex = require('../../knex');
 const logger = require('./logger');
 const config = require('../knexfile');
+const promiseMapSeries = require('../lib/util/promise-map-series');
 const fs = require('fs');
 
-const Bluebird = require('bluebird');
-
-Bluebird.each(Object.keys(config), function(dialectName) {
+promiseMapSeries(Object.keys(config), function(dialectName) {
   return require('./suite')(logger(knex(config[dialectName])));
 });
 
