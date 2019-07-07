@@ -1,6 +1,6 @@
 const Knex = require('../../lib');
+const promiseDelay = require('../../lib/util/promise-delay');
 
-const Bluebird = require('bluebird');
 const toxiproxy = require('toxiproxy-node-client');
 const toxicli = new toxiproxy.Toxiproxy('http://localhost:8474');
 const rp = require('request-promise-native');
@@ -178,7 +178,7 @@ async function main() {
   setInterval(recreateProxies, 2000);
 
   while (true) {
-    await Bluebird.delay(20); // kill everything every quite often from server side
+    await promiseDelay(20); // kill everything every quite often from server side
     try {
       await Promise.all([
         killConnectionsPg(),
